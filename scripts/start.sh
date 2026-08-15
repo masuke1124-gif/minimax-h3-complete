@@ -9,6 +9,8 @@ LOG_DIR="$ROOT/logs"
 
 mkdir -p "$ROOT" "$LOG_DIR"
 
+/opt/h3/bin/bootstrap.sh
+
 if command -v jupyter >/dev/null 2>&1; then
   nohup jupyter lab \
     --ip=0.0.0.0 \
@@ -21,7 +23,10 @@ if command -v jupyter >/dev/null 2>&1; then
     >"$LOG_DIR/jupyter.log" 2>&1 &
 fi
 
-/opt/h3/bin/bootstrap.sh
+python /opt/h3/bin/s3_sync.py daemon \
+  --dirs "${H3_S3_PUSH_DIRS:-input,output,workflows,logs}" \
+  --interval "${H3_S3_SYNC_INTERVAL:-60}" \
+  >"$LOG_DIR/s3-sync.log" 2>&1 &
 
 PROFILE_JSON="$(python /opt/h3/bin/gpu_profile.py)"
 printf '%s\n' "$PROFILE_JSON" | tee "$ROOT/gpu-profile.json"
@@ -44,4 +49,3 @@ exec python main.py \
   --input-directory "$ROOT/input" \
   --preview-method auto \
   "${EXTRA_ARGS[@]}"
-

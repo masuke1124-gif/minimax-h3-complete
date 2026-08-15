@@ -48,6 +48,9 @@ def main(root):
     assert "4274783a23afcfdbea3b4876cb79effd6c510785" in dockerfile
     assert "SageAttention" not in dockerfile
     assert "patch_comfy_quant.py" in dockerfile
+    assert "boto3" in dockerfile
+    assert '"-g"' in dockerfile
+    assert (root / "scripts" / "s3_sync.py").exists() or (root / "bin" / "s3_sync.py").exists()
     patcher_path = root / "scripts" / "patch_comfy_quant.py"
     if not patcher_path.exists():
         patcher_path = root / "bin" / "patch_comfy_quant.py"

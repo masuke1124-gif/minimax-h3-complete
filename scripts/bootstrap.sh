@@ -15,7 +15,7 @@ mkdir -p \
   "$WORKFLOW_ROOT" "$APP/user/default/workflows"
 
 cat > "$ROOT/extra_model_paths.yaml" <<YAML
-h3_network_volume:
+h3_local_cache:
     base_path: $MODEL_ROOT
     is_default: true
     diffusion_models: diffusion_models/
@@ -23,6 +23,10 @@ h3_network_volume:
     vae: vae/
     loras: loras/
 YAML
+
+python /opt/h3/bin/s3_sync.py check
+python /opt/h3/bin/s3_sync.py pull \
+  --dirs "${H3_S3_PULL_DIRS:-models,input,output,workflows,logs}"
 
 download_verified() {
   local url="$1" dest="$2" expected="$3"
@@ -76,8 +80,8 @@ download_verified() {
 
 if [ "${H3_SKIP_MODEL_DOWNLOAD:-0}" != "1" ]; then
   FREE_BYTES="$(df -PB1 "$ROOT" | awk 'NR==2 {print $4}')"
-  if [ "${FREE_BYTES:-0}" -lt 50000000000 ]; then
-    echo "Network Volumeの空き容量が50GB未満です。" >&2
+  if [ "${FREE_BYTES:-0}" -lt 60000000000 ]; then
+    echo "Container diskの空き容量が60GB未満です。100GB以上へ増やしてください。" >&2
     exit 1
   fi
 
@@ -105,10 +109,11 @@ if [ "${H3_SKIP_MODEL_DOWNLOAD:-0}" != "1" ]; then
 fi
 
 for workflow in /opt/h3/workflows/*.json; do
-  cp -f "$workflow" "$WORKFLOW_ROOT/"
-  cp -f "$workflow" "$APP/user/default/workflows/"
+  cp -n "$workflow" "$WORKFLOW_ROOT/"
+  cp -f "$WORKFLOW_ROOT/$(basename "$workflow")" "$APP/user/default/workflows/"
 done
+
+python /opt/h3/bin/s3_sync.py push --dirs "models,workflows"
 
 python -m py_compile "$APP/custom_nodes/H3-Complete/__init__.py"
 echo "✅ MiniMax H3 bundle ready"
-

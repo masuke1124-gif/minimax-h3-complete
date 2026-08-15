@@ -21,7 +21,7 @@ RUN mkdir -p /opt/h3 \
     && git clone https://github.com/Comfy-Org/ComfyUI.git /opt/h3/ComfyUI \
     && git -C /opt/h3/ComfyUI checkout "${COMFYUI_COMMIT}" \
     && python -m pip install --upgrade pip setuptools wheel \
-    && python -m pip install -r /opt/h3/ComfyUI/requirements.txt jupyterlab
+    && python -m pip install -r /opt/h3/ComfyUI/requirements.txt boto3 jupyterlab
 
 RUN git clone https://github.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo.git \
       /opt/h3/ComfyUI/custom_nodes/ComfyUI-MiniMax-H3-Turbo \
@@ -40,6 +40,7 @@ RUN chmod 755 /opt/h3/bin/*.sh /opt/h3/tests/*.sh \
     && python /opt/h3/tests/validate_bundle.py /opt/h3 \
     && python /opt/h3/tests/test_patch_comfy_quant.py /opt/h3/bin/patch_comfy_quant.py \
     && python /opt/h3/tests/test_gpu_profile.py \
+    && python /opt/h3/tests/test_s3_sync.py /opt/h3/bin/s3_sync.py \
     && python /opt/h3/tests/test_exact_nodes.py \
          /opt/h3/ComfyUI/custom_nodes/H3-Complete/__init__.py \
     && H3_REQUIRE_MEDIA_TESTS=1 python /opt/h3/tests/test_exact_video_save.py \
@@ -48,5 +49,5 @@ RUN chmod 755 /opt/h3/bin/*.sh /opt/h3/tests/*.sh \
 
 EXPOSE 8188 8888
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
+ENTRYPOINT ["/usr/bin/tini", "-g", "--"]
 CMD ["/opt/h3/bin/start.sh"]

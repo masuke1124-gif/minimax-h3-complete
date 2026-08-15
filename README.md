@@ -1,6 +1,16 @@
 # MiniMax H3 Complete for RunPod
 
-GPUを固定せず、RunPodで起動するたびに対応GPUを自由に選べるMiniMax H3環境です。
+地域やGPUを固定せず、RunPodで起動するたびに利用可能な対応GPUを選べるMiniMax H3環境です。
+
+## 重要な設計
+
+- PodにはNetwork Volumeを直接接続しません。
+- 新しいNetwork VolumeはRunPod S3 API経由で使用します。
+- モデルなどは起動時にS3からContainer diskへ取得します。
+- 出力、入力、ワークフロー、ログは60秒ごとにS3へ保存します。
+- この方式ならNetwork VolumeのデータセンターにGPU選択を固定されません。
+
+Network VolumeをPodの`/workspace`へ直接接続すると、選べるGPUはそのVolumeと同じデータセンターに制限されます。
 
 ## 収録内容
 
@@ -11,25 +21,32 @@ GPUを固定せず、RunPodで起動するたびに対応GPUを自由に選べ�
 - 入力画像の縦横比を維持した内部解像度の自動計算
 - 最終動画を入力画像と同じwidth×heightへ復元
 - 奇数width/heightはH.264 4:4:4で保存し、寸法を勝手に変えない
-- モデルはNetwork Volumeの`/workspace/H3/models`へSHA-256検証付きで保存
-- 中断したダウンロードは次回起動時に再開
+- モデルはSHA-256検証付きで保存
+- 中断したHugging Faceダウンロードは次回起動時に再開
 - ComfyUI `8188`、JupyterLab `8888`
 
 ## 対応GPU
 
-CUDA Compute Capability 8.0以上、実VRAM 44GiB以上を自動判定します。
+CUDA Compute Capability 8.0以上、実VRAM 44GiB以上（48GB級以上）を自動判定します。
 
-- 価格優先: A40 48GB、RTX A6000 48GB、RTX 6000 Ada 48GB、L40/L40S 48GB
-- 速度優先: A100 80GB、H100 80GB、RTX PRO 6000 96GB、H200 141GB、B200
+- 速度優先: B200、H200、H100、RTX PRO 6000、A100
+- 保険: L40S、L40、RTX 6000 Ada、RTX A6000、A40
 
 24GB/32GB GPUは安定性を保証できないため起動前に停止します。
 
-## 永続領域
+## 永続保存
 
-RunPodのNetwork Volumeを`/workspace`へ接続してください。モデル、出力、ログ、入力、ワークフローは`/workspace/H3`に残ります。Dockerイメージを更新しても消えません。
+新規のS3対応Network Volumeを用意し、次の値をRunPodテンプレートの環境変数またはSecretsに設定します。
+
+- `RUNPOD_S3_ENDPOINT_URL`
+- `RUNPOD_NETWORK_VOLUME_ID`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+認証情報がない場合は、データ消失を避けるためComfyUIを起動しません。旧Volumeを参照する設定は含まれていません。
 
 ## 初回起動
 
-初回だけ約43GBのモデルを取得します。取得済みファイルはSHA-256が一致すれば再ダウンロードしません。二回目以降はGPUを変更しても同じNetwork Volumeを接続するだけです。
+Container diskは`100 GB`以上にします。初回だけ約43GBのモデルを取得し、新しいS3対応Network Volumeにも保存します。別地域のPodへ変更した場合は、同じモデルをS3から新しいContainer diskへ取得します。
 
-RunPodテンプレートの値とGPUの選び分けは[`RUNPOD_SETUP.md`](RUNPOD_SETUP.md)にまとめています。
+RunPodテンプレートの正確な値は[`RUNPOD_SETUP.md`](RUNPOD_SETUP.md)にまとめています。
