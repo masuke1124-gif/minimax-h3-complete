@@ -37,7 +37,7 @@ RUN chmod 755 /opt/h3/bin/*.sh /opt/h3/tests/*.sh \
     && python /opt/h3/bin/patch_comfy_quant.py /opt/h3/ComfyUI/comfy/ops.py \
     && python -m py_compile /opt/h3/ComfyUI/custom_nodes/H3-Complete/__init__.py \
     && python /opt/h3/tests/validate_bundle.py /opt/h3 \
-    && python /opt/h3/tests/test_patch_comfy_quant.py \
+    && python /opt/h3/tests/test_patch_comfy_quant.py /opt/h3/bin/patch_comfy_quant.py \
     && python /opt/h3/tests/test_gpu_profile.py \
     && python /opt/h3/tests/test_exact_nodes.py \
          /opt/h3/ComfyUI/custom_nodes/H3-Complete/__init__.py \
