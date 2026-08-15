@@ -30,6 +30,7 @@ RUN git clone https://github.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo.git \
 COPY custom_nodes/H3-Complete /opt/h3/ComfyUI/custom_nodes/H3-Complete
 COPY workflows /opt/h3/workflows
 COPY scripts /opt/h3/bin
+COPY scripts /opt/h3/scripts
 COPY tests /opt/h3/tests
 COPY Dockerfile /opt/h3/Dockerfile
 
