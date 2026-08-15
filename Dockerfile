@@ -31,6 +31,7 @@ COPY custom_nodes/H3-Complete /opt/h3/ComfyUI/custom_nodes/H3-Complete
 COPY workflows /opt/h3/workflows
 COPY scripts /opt/h3/bin
 COPY tests /opt/h3/tests
+COPY Dockerfile /opt/h3/Dockerfile
 
 RUN chmod 755 /opt/h3/bin/*.sh \
     && python -m py_compile /opt/h3/ComfyUI/custom_nodes/H3-Complete/__init__.py \
